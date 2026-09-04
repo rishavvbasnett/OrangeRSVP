@@ -1,0 +1,268 @@
+:root {
+  --ors-red: #d92f45;
+  --ors-red-deep: #ad2034;
+  --ors-blue: #1557c0;
+  --ors-blue-deep: #103d87;
+  --ors-white: #ffffff;
+  --ors-ink: #17233f;
+  --ors-muted: #52617d;
+}
+
+.page {
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  min-height: 100svh;
+  background:
+    radial-gradient(
+      circle at 20% 15%,
+      rgb(21 87 192 / 20%) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgb(217 47 69 / 30%) 0%,
+      transparent 54%
+    ),
+    linear-gradient(135deg, #ffeef1 0%, #e8f0ff 55%, #f8faff 100%);
+}
+
+.card {
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: 1.15fr 0.85fr;
+  border: 1px solid rgb(21 87 192 / 16%);
+  border-radius: 26px;
+  box-shadow:
+    0 22px 65px rgb(16 39 84 / 16%),
+    0 8px 20px rgb(217 47 69 / 15%);
+  width: min(1120px, 100%);
+  height: min(700px, calc(100svh - 2rem));
+  background: var(--ors-white);
+  animation: cardEnter 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.leftPanel {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  animation: imageFloat 10s ease-in-out infinite alternate;
+  transform: scale(1.03);
+  object-fit: cover;
+}
+
+.heroText {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 0.65rem;
+  color: var(--ors-white);
+  text-shadow: 0 3px 18px rgb(23 35 63 / 75%);
+  animation: fadeSlideUp 700ms 180ms ease both;
+  inset: 2rem 2rem auto 2rem;
+}
+
+.eyebrow {
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  width: fit-content;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: rgb(255 255 255 / 20%);
+}
+
+.heroText h1 {
+  font-size: clamp(2.1rem, 4vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.12;
+  -webkit-text-stroke: 1px var(--ors-blue-deep);
+}
+
+.rightPanel {
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f8ff 100%);
+}
+
+.formWrap {
+  display: grid;
+  gap: 1rem;
+  width: min(360px, 100%);
+  animation: fadeSlideUp 600ms 250ms ease both;
+}
+
+.brand {
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ors-red);
+}
+
+.formWrap h2 {
+  font-size: clamp(1.55rem, 2.8vw, 2rem);
+  line-height: 1.15;
+  color: var(--ors-ink);
+}
+
+.subtitle {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--ors-blue-deep);
+}
+
+.form {
+  display: grid;
+  gap: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.field span {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.field input {
+  border: 1px solid #d4def5;
+  border-radius: 12px;
+  padding: 0.76rem 0.88rem;
+  width: 100%;
+  color: var(--ors-ink);
+  background: #ffffff;
+  transition: border-color 180ms ease;
+}
+
+.field input:focus-visible {
+  border-color: var(--ors-blue);
+  outline: none;
+}
+
+.field input::placeholder {
+  color: #7c88a4;
+}
+
+.submitButton {
+  margin-top: 0.4rem;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.78rem 1rem;
+  font-weight: 800;
+  color: var(--ors-white);
+  background: var(--ors-blue-deep);
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.66;
+  cursor: not-allowed;
+}
+
+.errorText {
+  border: 1px solid #e58a91;
+  border-radius: 10px;
+  padding: 0.56rem 0.72rem;
+  font-size: 0.9rem;
+  color: #8f1b2c;
+  background: #ffe6e8;
+}
+
+@media (max-width: 920px) {
+  .page {
+    place-items: start center;
+    padding: 0.9rem;
+  }
+
+  .card {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .leftPanel {
+    min-height: 260px;
+  }
+
+  .rightPanel {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 0.75rem;
+  }
+
+  .card {
+    border-radius: 18px;
+  }
+
+  .leftPanel {
+    display: none;
+  }
+
+  .rightPanel {
+    padding: 1.5rem 1.1rem;
+  }
+
+  .formWrap {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .heroText,
+  .formWrap,
+  .heroImage {
+    animation: none;
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes imageFloat {
+  from {
+    transform: scale(1.03) translateX(-6px);
+  }
+
+  to {
+    transform: scale(1.08) translateX(6px);
+  }
+}

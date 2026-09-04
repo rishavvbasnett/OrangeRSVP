@@ -1,0 +1,19 @@
+### Create User 1 (fang@gmail.com)
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "fang@gmail.com",
+  "password": "fang",
+  "role": "manager"
+}
+
+### Create User 2 (bai@gmail.com)
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "bai@gmail.com",
+  "password": "bai",
+  "role": "customer"
+}
