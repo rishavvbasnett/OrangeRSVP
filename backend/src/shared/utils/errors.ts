@@ -22,9 +22,9 @@ export class ForbiddenError extends HttpError {
   }
 }
 
-export class ItemNotFound extends HttpError {
+export class ItemNotFoundError extends HttpError {
   constructor(message: string) {
     super(message, 404);
-    this.name = "ItemNotFound";
+    this.name = "ItemNotFoundError";
   }
 }

@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import * as userService from "./users.service.js";
 import { RegisterUserSchema } from "./users.validation.js";
-import { ParamIdSchema } from "../../shared/shared.validation.js";
-import { ItemNotFound } from "../../shared/utils/errors.js";
+import { IdParamSchema } from "../../shared/shared.validation.js";
+import { ItemNotFoundError } from "../../shared/utils/errors.js";
 import { ZodError } from "zod";
 
 export const createUser = async (
@@ -39,13 +39,13 @@ export const deleteUser = async (
 ) => {
   try {
     const rawId = request.params.id;
-    const validId = ParamIdSchema.parse(rawId);
+    const validId = IdParamSchema.parse(rawId);
 
     const deletedUser = await userService.deleteOne(validId);
     return response.status(200).json(deletedUser);
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new ItemNotFound(error.issues[0].message);
+      throw new ItemNotFoundError(error.issues[0].message);
     }
     next(error);
   }

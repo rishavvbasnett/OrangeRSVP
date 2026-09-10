@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const ParamIdSchema = z
+export const IdParamSchema = z
   .string()
   .min(1, "ID is required")
   .regex(/^[0-9a-fA-F]{24}$/, "Invalid ObjectID");

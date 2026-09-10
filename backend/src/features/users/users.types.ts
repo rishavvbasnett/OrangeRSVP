@@ -1,6 +1,5 @@
 import z from "zod";
 import type { RegisterUserSchema } from "./users.validation.js";
-import type { ParamIdSchema } from "@/shared/shared.validation.js";
 
 export type role = "manager" | "customer" | "admin";
 
@@ -13,5 +12,3 @@ export interface UserDocument {
 }
 
 export type PublicUser = Omit<UserDocument, "passwordHash">;
-
-export type ParamId = z.infer<typeof ParamIdSchema>;

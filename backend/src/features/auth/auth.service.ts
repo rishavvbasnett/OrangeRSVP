@@ -6,7 +6,7 @@ import { UnauthorizedError } from "../../shared/utils/errors.js";
 import { JWT_SECRET } from "../../shared/config/env.js";
 
 export const login = async ({ email, password }: LoginUser) => {
-  const foundUser = await User.findOne({ email });
+  const foundUser = await User.findOne({ email }).lean();
   if (!foundUser) throw new UnauthorizedError("Invalid email or password");
   const isValid = await bcrypt.compare(password, foundUser.passwordHash);
   if (!isValid) throw new UnauthorizedError("Invalid email or password");

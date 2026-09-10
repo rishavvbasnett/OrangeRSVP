@@ -7,7 +7,12 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test-reserve-service": "vitest run src/features/reservations/reservations.service.test.ts",
+    "test-restro-service": "vitest run src/features/restaurants/restaurants.service.test.ts",
+    "test-restro-routes": "vitest run src/features/restaurants/restaurants.routes.test.ts",
+    "test-reserve-routes": "vitest run src/features/reservations/reservations.routes.test.ts",
+    "test-auth-routes": "vitest run src/features/auth/auth.routes.test.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

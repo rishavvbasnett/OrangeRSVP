@@ -18,9 +18,10 @@ const RestaurantDbSchema = new Schema<RestaurantDocument>({
   businessHours: {
     type: [
       {
-        day: { type: String, required: true },
-        opensAt: { type: String, required: true },
-        closesAt: { type: String, required: true },
+        closed: { type: Boolean, required: true },
+        day: String,
+        opensAt: String,
+        closesAt: String,
       },
     ],
     required: [true, "Business hours is required"],

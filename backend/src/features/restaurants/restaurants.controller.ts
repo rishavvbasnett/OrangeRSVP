@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as restaurantService from "./restaurants.service.js";
 import { RestaurantZodSchema } from "./restaurants.validation.js";
-import { ParamIdSchema } from "../../shared/shared.validation.js";
+import { IdParamSchema } from "../../shared/shared.validation.js";
 
 export const createOne = async (
   request: Request,
@@ -11,7 +11,6 @@ export const createOne = async (
   try {
     const validRestaurant = RestaurantZodSchema.parse(request.body);
     const savedRestaurant = await restaurantService.createOne(validRestaurant);
-    console.log(savedRestaurant);
     return response.status(201).json(savedRestaurant);
   } catch (error) {
     next(error);
@@ -24,7 +23,7 @@ export const getOne = async (
   next: NextFunction,
 ) => {
   try {
-    const validId = ParamIdSchema.parse(request.params.id);
+    const validId = IdParamSchema.parse(request.params.id);
     const foundRestaurant = await restaurantService.getOne(validId);
     return response.json(foundRestaurant);
   } catch (error) {
@@ -51,7 +50,7 @@ export const deleteOne = async (
   next: NextFunction,
 ) => {
   try {
-    const restaurantId = ParamIdSchema.parse(request.params.id);
+    const restaurantId = IdParamSchema.parse(request.params.id);
     const deletedRestaurant = await restaurantService.deleteOne(restaurantId);
     return response.json(deletedRestaurant);
   } catch (error) {
