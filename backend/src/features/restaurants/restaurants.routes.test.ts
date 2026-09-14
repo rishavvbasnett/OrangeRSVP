@@ -11,6 +11,7 @@ import type {
   RestaurantInput,
 } from "./restaurants.types.js";
 import { JWT_SECRET } from "../../shared/config/env.js";
+import { createRestaurantPayload } from "../../shared/test/createPayload.js";
 
 let mongoServer: MongoMemoryServer;
 let managerToken: string;
@@ -22,9 +23,9 @@ beforeAll(async () => {
     binary: { version: "7.0.14" },
   });
   await mongoose.connect(mongoServer.getUri());
-  managerToken = await helpers.createUserToken("manager");
-  customerToken = await helpers.createUserToken("customer");
-  adminToken = await helpers.createUserToken("admin");
+  managerToken = await helpers.createToken("manager");
+  customerToken = await helpers.createToken("customer");
+  adminToken = await helpers.createToken("admin");
 });
 
 afterAll(async () => {
@@ -36,44 +37,17 @@ beforeEach(async () => {
   await Restaurant.deleteMany({});
 });
 
-const makeRestaurantPayload = (overrides: Partial<any> = {}) => {
-  return {
-    name: "Prime",
-    address: "Steinway street",
-    isActive: true,
-    businessHours: [
-      {
-        day: "monday",
-        closed: false,
-        opensAt: "09:00",
-        closesAt: "22:00",
-      },
-      {
-        day: "tuesday",
-        closed: false,
-        opensAt: "09:00",
-        closesAt: "22:00",
-      },
-      {
-        day: "sunday",
-        closed: true,
-      },
-    ],
-    ...overrides,
-  };
-};
-
 describe("POST /restaurants", () => {
   it("HAPPY PATH with VALID: FIELDS, TOKEN, ROLE", async () => {
     const response = await request(app)
       .post("/restaurants")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send(makeRestaurantPayload());
+      .send(createRestaurantPayload());
 
     expect(response.status).toBe(201);
-    expect(response.body).toMatchObject(makeRestaurantPayload());
+    expect(response.body).toMatchObject(createRestaurantPayload());
     expect(await Restaurant.findOne({ name: "Prime" })).toMatchObject(
-      makeRestaurantPayload(),
+      createRestaurantPayload(),
     );
   });
 
@@ -152,7 +126,7 @@ describe("POST /restaurants", () => {
         },
       },
     ])("rejects invalid Payload with: $label", async ({ overrides }) => {
-      const payload = makeRestaurantPayload(overrides);
+      const payload = createRestaurantPayload(overrides);
       const response = await request(app)
         .post("/restaurants")
         .set("Authorization", `Bearer ${adminToken}`)
@@ -178,7 +152,7 @@ describe("POST /restaurants", () => {
       const response = await request(app)
         .post("/restaurants")
         .set("Authorization", `Bearer ${token}`)
-        .send(makeRestaurantPayload());
+        .send(createRestaurantPayload());
 
       expect(response.status).toBe(403);
       expect(await Restaurant.countDocuments()).toBe(0);
@@ -208,7 +182,7 @@ describe("POST /restaurants", () => {
       const response = await request(app)
         .post("/restaurants")
         .set("Authorization", `Bearer ${token}`)
-        .send(makeRestaurantPayload());
+        .send(createRestaurantPayload());
 
       expect(response.status).toBe(401);
       expect(await Restaurant.countDocuments()).toBe(0);
@@ -218,12 +192,12 @@ describe("POST /restaurants", () => {
     const response1 = await request(app)
       .post("/restaurants")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send(makeRestaurantPayload());
+      .send(createRestaurantPayload());
 
     const response2 = await request(app)
       .post("/restaurants")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send(makeRestaurantPayload());
+      .send(createRestaurantPayload());
 
     expect(response2.status).not.toBe(201);
     expect(await Restaurant.countDocuments()).toBe(1);
@@ -235,11 +209,11 @@ describe("GET /restaurants", () => {
   let restaurant2Payload;
 
   beforeEach(async () => {
-    restaurant1Payload = makeRestaurantPayload({
+    restaurant1Payload = createRestaurantPayload({
       name: "restaurant1",
       address: "address1",
     });
-    restaurant2Payload = makeRestaurantPayload({
+    restaurant2Payload = createRestaurantPayload({
       name: "restaurant2",
       address: "address2",
     });
@@ -325,7 +299,7 @@ describe("GET /restaurants/:id", () => {
   beforeEach(async () => {
     await Restaurant.deleteMany({});
     createdRestaurant1 = await Restaurant.create(
-      makeRestaurantPayload({
+      createRestaurantPayload({
         name: "restaurant1",
         address: "address1",
       }),
@@ -439,7 +413,7 @@ describe("DELETE /restaurants/:id", () => {
 
   beforeEach(async () => {
     createdRestaurant1 = await Restaurant.create(
-      makeRestaurantPayload({
+      createRestaurantPayload({
         name: "restaurant1",
         address: "address1",
       }),

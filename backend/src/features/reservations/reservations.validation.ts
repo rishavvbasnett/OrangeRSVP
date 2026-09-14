@@ -1,4 +1,5 @@
 import z from "zod";
+import { IdParamSchema } from "../../shared/shared.validation.js";
 
 export const ReservationInputSchema = z.object({
   name: z.string(),
@@ -16,4 +17,5 @@ export const ReservationInputSchema = z.object({
     .default("unconfirmed"),
   specialRequest: z.string().optional(),
   specialOccasion: z.string().optional(),
+  restaurantId: IdParamSchema,
 });

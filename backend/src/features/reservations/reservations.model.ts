@@ -33,13 +33,15 @@ const ReservationSchema = new Schema<ReservationDocument>({
   specialOccasion: {
     type: String,
   },
-});
-
-ReservationSchema.set("toJSON", {
-  transform: (_document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id;
-    delete returnedObject.__v;
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  restaurantId: {
+    type: Schema.Types.ObjectId,
+    ref: "Restaurant",
+    required: true,
   },
 });
 

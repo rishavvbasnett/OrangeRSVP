@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import User from "../../features/users/users.model.js";
 import * as authService from "../../features/auth/auth.service.js";
 import type { role } from "../../features/users/users.types.js";
+import { randomUUID } from "node:crypto";
 
 const saltRounds = 12;
 
@@ -16,17 +17,12 @@ export const compare = async (
   return await bcrypt.compare(plainValue, hashedValue);
 };
 
-export const createUserAndSave = async (role: role) => {
+export const createToken = async (role: role) => {
   const user = await User.create({
-    email: `${role}@test.com`,
-    passwordHash: await convert("testpass"),
+    email: `${randomUUID()}@gmail.com`,
     role,
+    passwordHash: "123",
   });
-  return user;
-};
-
-export const createUserToken = async (role: role) => {
-  const user = await createUserAndSave(role);
   const token = authService.createToken({ id: user.id, role: user.role });
   return token;
 };

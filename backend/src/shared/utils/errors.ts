@@ -28,3 +28,10 @@ export class ItemNotFoundError extends HttpError {
     this.name = "ItemNotFoundError";
   }
 }
+
+export class BadRequestError extends HttpError {
+  constructor(message: string) {
+    super(message, 400);
+    this.name = "BadRequestError";
+  }
+}

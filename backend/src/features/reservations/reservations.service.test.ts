@@ -67,7 +67,7 @@ describe("createOne", () => {
       specialOccasion: "birthday",
       specialRequest: "booth table",
     });
-    expect(await Reservation.findById(createdReservation._id)).toMatchObject({
+    expect(await Reservation.findById(createdReservation.id)).toMatchObject({
       name: validReservationInput.name,
       partySize: validReservationInput.partySize,
       reservationTime: validReservationInput.reservationTime,

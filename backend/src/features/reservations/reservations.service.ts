@@ -1,39 +1,49 @@
 import { IdParam } from "../../shared/shared.types.js";
-import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import {
+  BadRequestError,
+  ItemNotFoundError,
+} from "../../shared/utils/errors.js";
+import Restaurant from "../restaurants/restaurants.model.js";
 import Reservation from "./reservations.model.js";
 import type {
   ReservationDocument,
+  ReservationDto,
   ReservationInput,
 } from "./reservations.types.js";
 
-export const createOne = async (
+const createOne = async (
   validReservation: ReservationInput,
-): Promise<ReservationDocument> => {
-  return await Reservation.create(validReservation);
+): Promise<ReservationDto> => {
+  await ensureRestaurantExists(validReservation.restaurantId);
+  const createdReservation = await Reservation.create(validReservation);
+  return toReservationDto(createdReservation);
 };
 
-export const getAll = async (): Promise<ReservationDocument[]> => {
-  return await Reservation.find({}).sort({ name: 1, _id: 1 }).lean();
+const getAll = async (): Promise<ReservationDto[]> => {
+  const allReservations = await Reservation.find({})
+    .sort({ name: 1, _id: 1 })
+    .lean();
+  return allReservations.map((reservation) => toReservationDto(reservation));
 };
 
-export const getOne = async (
-  reservationId: IdParam,
-): Promise<ReservationDocument> => {
+const getOne = async (reservationId: IdParam): Promise<ReservationDto> => {
   const foundReservation = await Reservation.findById(reservationId).lean();
   if (!foundReservation) throw new ItemNotFoundError("Reservation not found");
-  return foundReservation;
+  return toReservationDto(foundReservation);
 };
 
-export const deleteOne = async (
-  reservationId: IdParam,
-): Promise<ReservationDocument | null> => {
-  return await Reservation.findByIdAndDelete(reservationId);
+const deleteOne = async (reservationId: IdParam): Promise<ReservationDto> => {
+  const deletedReservation = await Reservation.findByIdAndDelete(reservationId);
+  if (!deletedReservation) throw new ItemNotFoundError("Reservation not found");
+  return toReservationDto(deletedReservation);
 };
 
-export const updateOne = async (
+const updateOne = async (
   reservationId: IdParam,
-  newReservation: ReservationInput,
-): Promise<ReservationDocument> => {
+  newReservation: Partial<ReservationInput>,
+): Promise<ReservationDto> => {
+  if (newReservation.restaurantId)
+    await ensureRestaurantExists(newReservation.restaurantId);
   const updatedReservation = await Reservation.findByIdAndUpdate(
     reservationId,
     newReservation,
@@ -43,5 +53,40 @@ export const updateOne = async (
     },
   );
   if (!updatedReservation) throw new ItemNotFoundError("Reservation not found");
-  return updatedReservation;
+  return toReservationDto(updatedReservation);
 };
+
+// Small Helper functions for Reservation Service //
+const ensureRestaurantExists = async (restaurantId: IdParam) => {
+  const foundRestaurant = await Restaurant.findById(restaurantId);
+  if (!foundRestaurant) throw new ItemNotFoundError("Restaurant doesn't exist");
+  return foundRestaurant;
+};
+
+const toReservationDto = (
+  reservationDocument: ReservationDocument,
+): ReservationDto => {
+  return {
+    id: reservationDocument._id.toString(),
+    name: reservationDocument.name,
+    partySize: reservationDocument.partySize,
+    reservationTime: reservationDocument.reservationTime,
+    phone: reservationDocument.phone,
+    email: reservationDocument.email,
+    status: reservationDocument.status,
+    specialRequest: reservationDocument.specialRequest,
+    specialOccasion: reservationDocument.specialOccasion,
+    userId: reservationDocument.userId.toString(),
+    restaurantId: reservationDocument.restaurantId.toString(),
+  };
+};
+
+const reservationService = {
+  createOne,
+  getOne,
+  deleteOne,
+  updateOne,
+  getAll,
+};
+
+export default reservationService;
