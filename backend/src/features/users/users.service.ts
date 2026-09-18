@@ -1,22 +1,20 @@
 import { ItemNotFoundError } from "../../shared/utils/errors.js";
 import User from "./users.model.js";
-import type { PublicUser, RegisterUser } from "./users.types.js";
+import type { UserDto, RegisterUser } from "./users.types.js";
 import * as Hash from "../../shared/utils/helpers.js";
 
-export const getOne = async (id: string): Promise<PublicUser> => {
+export const getOne = async (id: string): Promise<UserDto> => {
   const foundUser = await User.findById(id).lean();
   if (!foundUser) throw new ItemNotFoundError("User not found");
-  return makePublic(foundUser);
+  return toDto(foundUser);
 };
 
-export const getAll = async (): Promise<PublicUser[]> => {
+export const getAll = async (): Promise<UserDto[]> => {
   const allUsers = await User.find({}).sort({ name: 1, _id: 1 }).lean();
-  return allUsers.map((user) => makePublic(user));
+  return allUsers.map((user) => toDto(user));
 };
 
-export const createOne = async (
-  validUser: RegisterUser,
-): Promise<PublicUser> => {
+export const createOne = async (validUser: RegisterUser): Promise<UserDto> => {
   const passwordHash = await Hash.convert(validUser.password);
   const newUser = {
     email: validUser.email,
@@ -24,17 +22,17 @@ export const createOne = async (
     passwordHash,
   };
   const createdUser = await User.create(newUser);
-  return makePublic(createdUser);
+  return toDto(createdUser);
 };
 
-export const deleteOne = async (id: string): Promise<PublicUser> => {
+export const deleteOne = async (id: string): Promise<UserDto> => {
   const deletedUser = await User.findByIdAndDelete(id);
   if (!deletedUser) throw new ItemNotFoundError("Item not found");
-  return makePublic(deletedUser);
+  return toDto(deletedUser);
 };
 
-export const makePublic = (user: any): PublicUser => {
+export const toDto = (user: any): UserDto => {
   const userObject = user.toObject ? user.toObject() : user;
   const { passwordHash: _passwordHash, ...rest } = userObject;
-  return rest as PublicUser;
+  return rest as UserDto;
 };

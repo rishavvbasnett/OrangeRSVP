@@ -1,6 +1,8 @@
 import type { ReservationInput } from "../../features/reservations/reservations.types.js";
 import type { RestaurantInput } from "../../features/restaurants/restaurants.types.js";
 import mongoose from "mongoose";
+import { UserDocument } from "../../features/users/users.types.js";
+import type { TableInput } from "../../features/tables/tables.types.js";
 
 export const createRestaurantPayload = (
   overrides: Partial<RestaurantInput> = {},
@@ -43,6 +45,27 @@ export const createReservationPayload = (
     status: "unconfirmed",
     userId: new mongoose.Types.ObjectId().toString(),
     restaurantId: new mongoose.Types.ObjectId().toString(),
+    ...overrides,
+  };
+};
+
+export const createUserPayload = (overrides: Partial<UserDocument> = {}) => {
+  return {
+    email: "user",
+    passwordHash: "passwordHash",
+    role: "admin" as const,
+    ...overrides,
+  };
+};
+
+export const createTablePayload = (overrides: Partial<TableInput> = {}) => {
+  return {
+    restaurantId: new mongoose.Types.ObjectId().toString(),
+    tableName: "Front 1",
+    seats: 4,
+    maximumCapacity: 4,
+    status: "available",
+    overload: false,
     ...overrides,
   };
 };

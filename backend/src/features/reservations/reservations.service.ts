@@ -1,9 +1,6 @@
 import { IdParam } from "../../shared/shared.types.js";
-import {
-  BadRequestError,
-  ItemNotFoundError,
-} from "../../shared/utils/errors.js";
-import Restaurant from "../restaurants/restaurants.model.js";
+import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import { ensureRestaurantExists } from "../../shared/utils/helpers.js";
 import Reservation from "./reservations.model.js";
 import type {
   ReservationDocument,
@@ -48,19 +45,12 @@ const updateOne = async (
     reservationId,
     newReservation,
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     },
   );
   if (!updatedReservation) throw new ItemNotFoundError("Reservation not found");
   return toReservationDto(updatedReservation);
-};
-
-// Small Helper functions for Reservation Service //
-const ensureRestaurantExists = async (restaurantId: IdParam) => {
-  const foundRestaurant = await Restaurant.findById(restaurantId);
-  if (!foundRestaurant) throw new ItemNotFoundError("Restaurant doesn't exist");
-  return foundRestaurant;
 };
 
 const toReservationDto = (

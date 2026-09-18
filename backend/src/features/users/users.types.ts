@@ -1,14 +1,15 @@
 import z from "zod";
-import type { RegisterUserSchema } from "./users.validation.js";
+import type { UserInputSchema } from "./users.validation.js";
+import { Document } from "mongoose";
 
-export type role = "manager" | "customer" | "admin";
+export type role = "manager" | "customer" | "admin" | "kitchen" | "foh";
 
-export type RegisterUser = z.infer<typeof RegisterUserSchema>;
+export type RegisterUser = z.infer<typeof UserInputSchema>;
 
-export interface UserDocument {
+export interface UserDocument extends Document {
   email: string;
   passwordHash: string;
   role: role;
 }
 
-export type PublicUser = Omit<UserDocument, "passwordHash">;
+export type UserDto = Omit<UserDocument, "passwordHash">;

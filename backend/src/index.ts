@@ -1,4 +1,5 @@
 import "./shared/config/env.js";
+import "./shared/config/redis.js";
 import app from "./app.js";
 import { connectDB } from "./shared/config/db.js";
 import { PORT } from "./shared/config/env.js";

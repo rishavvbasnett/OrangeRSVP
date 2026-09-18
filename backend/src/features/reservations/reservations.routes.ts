@@ -2,6 +2,7 @@ import authenticate from "../../shared/middleware/authenticate.js";
 import requireRole from "../../shared/middleware/requireRole.js";
 import reservationController from "./reservations.controller.js";
 import express from "express";
+
 const reservationRouter = express.Router();
 
 reservationRouter.post(

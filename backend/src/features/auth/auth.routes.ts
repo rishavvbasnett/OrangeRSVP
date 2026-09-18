@@ -1,8 +1,18 @@
 import express from "express";
-import login from "./auth.controller.js";
+import authController from "./auth.controller.js";
+import { rateLimit } from "../../shared/middleware/rateLimit.js";
 
 const authRouter = express.Router();
 
-authRouter.post("/", login);
+authRouter.post(
+  "/",
+  rateLimit({
+    maxRequests: 5,
+    resetWindowSeconds: 60,
+    feature: "login",
+    keyGenerator: (request: Request) => request.ip,
+  }),
+  authController.login,
+);
 
 export default authRouter;

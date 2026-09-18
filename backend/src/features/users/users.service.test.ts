@@ -26,7 +26,7 @@ describe("makePublic", () => {
       role: "manager",
       passwordHash: "fang",
     };
-    expect(userService.makePublic(user1)).toEqual({
+    expect(userService.toDto(user1)).toEqual({
       email: "fangyuan@gmail.com",
       role: "manager",
     });

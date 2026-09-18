@@ -1,52 +1,34 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import * as userService from "./users.service.js";
-import { RegisterUserSchema } from "./users.validation.js";
+import { UserInputSchema } from "./users.validation.js";
 import { IdParamSchema } from "../../shared/shared.validation.js";
 import { ItemNotFoundError } from "../../shared/utils/errors.js";
-import { ZodError } from "zod";
+import asyncHandler from "../../shared/middleware/asyncHandler.js";
 
-export const createUser = async (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-) => {
-  try {
-    const validUserObject = RegisterUserSchema.parse(request.body);
+export const createUser = asyncHandler(
+  async (request: Request, response: Response) => {
+    const validUserObject = UserInputSchema.parse(request.body);
     const createdUser = await userService.createOne(validUserObject);
     return response.status(201).json(createdUser);
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const getAllUsers = async (
-  _request: Request,
-  response: Response,
-  next: NextFunction,
-) => {
-  try {
+export const getAllUsers = asyncHandler(
+  async (_request: Request, response: Response) => {
     const allUsers = await userService.getAll();
     return response.json(allUsers);
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const deleteUser = async (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-) => {
-  try {
+export const deleteUser = asyncHandler(
+  async (request: Request, response: Response) => {
     const rawId = request.params.id;
-    const validId = IdParamSchema.parse(rawId);
-
-    const deletedUser = await userService.deleteOne(validId);
-    return response.status(200).json(deletedUser);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new ItemNotFoundError(error.issues[0].message);
+    const parsedId = IdParamSchema.safeParse(rawId);
+    if (!parsedId.success) {
+      throw new ItemNotFoundError(parsedId.error.issues[0].message);
     }
-    next(error);
-  }
-};
+
+    const deletedUser = await userService.deleteOne(parsedId.data);
+    return response.status(200).json(deletedUser);
+  },
+);

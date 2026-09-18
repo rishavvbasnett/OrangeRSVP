@@ -1,19 +1,18 @@
-import * as authService from "./auth.service.js";
-import { Request, Response, NextFunction } from "express";
+import authService from "./auth.service.js";
+import { Request, Response } from "express";
 import { LoginUserSchema } from "./auth.validation.js";
+import asyncHandler from "../../shared/middleware/asyncHandler.js";
 
-export const login = async (
-  request: Request,
-  response: Response,
-  next: NextFunction,
-) => {
-  try {
+export const login = asyncHandler(
+  async (request: Request, response: Response) => {
     const credentials = LoginUserSchema.parse(request.body);
     const userInfo = await authService.login(credentials);
     return response.json(userInfo);
-  } catch (error) {
-    next(error);
-  }
+  },
+);
+
+const authController = {
+  login,
 };
 
-export default login;
+export default authController;

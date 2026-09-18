@@ -35,3 +35,10 @@ export class BadRequestError extends HttpError {
     this.name = "BadRequestError";
   }
 }
+
+export class TooManyRequestsError extends HttpError {
+  constructor(message: string = "Too many requests") {
+    super(message, 429);
+    this.name = "TooManyRequestsError";
+  }
+}

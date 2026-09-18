@@ -8,7 +8,7 @@ import type {
   ReservationInput,
 } from "./reservations.types.js";
 import Reservation from "./reservations.model.js";
-import mongoServer from "../../shared/utils/mongoServer.setup.js";
+import mongoServer from "../../shared/test/mongoServer.setup.js";
 import { RestaurantDocument } from "../restaurants/restaurants.types.js";
 import {
   createReservationPayload,

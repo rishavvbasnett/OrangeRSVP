@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import Reservation from "./reservations.model.js";
 import * as reservationService from "./reservations.service.js";
 import type { ReservationInput } from "./reservations.types.js";
-import mongoServer from "../../shared/utils/mongoServer.setup.js";
+import mongoServer from "../../shared/test/mongoServer.setup.js";
 import { ItemNotFoundError } from "../../shared/utils/errors.js";
 
 const createReservationPayload = (
