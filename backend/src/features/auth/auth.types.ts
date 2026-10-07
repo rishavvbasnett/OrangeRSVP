@@ -1,7 +1,14 @@
-import { LoginUserSchema } from "./auth.validation.js";
 import z from "zod";
-import type { AuthenticatedUser } from "../../shared/shared.types.js";
+import {
+  AccessTokenPayloadSchema,
+  CredentialSchema,
+  RefreshTokenSchema,
+} from "./auth.validation.js";
 
-export type LoginUser = z.infer<typeof LoginUserSchema>;
-
-export type AuthTokenPayload = AuthenticatedUser;
+export type AccessTokenPayload = z.infer<typeof AccessTokenPayloadSchema>;
+export type Credential = z.infer<typeof CredentialSchema>;
+export type RefreshToken = z.infer<typeof RefreshTokenSchema>;
+export type DecodedAccessToken = AccessTokenPayload & {
+  jti: string;
+  exp: number;
+};

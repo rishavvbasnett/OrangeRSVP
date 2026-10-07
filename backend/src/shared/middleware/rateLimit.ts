@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import asyncHandler from "./asyncHandler.js";
-import { redis } from "../config/redis.js";
+import redis from "../config/redis.js";
 import { TooManyRequestsError } from "../utils/errors.js";
 
 interface RateLimitOptions {

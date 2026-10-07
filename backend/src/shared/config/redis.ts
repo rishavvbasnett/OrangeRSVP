@@ -1,7 +1,7 @@
-import Redis from "ioredis";
-import { REDIS_URL } from "./env.js";
+import { Redis } from "ioredis";
+import env from "./env.js";
 
-export const redis = new Redis(REDIS_URL, {
+const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: 3,
   lazyConnect: false,
 });
@@ -13,3 +13,5 @@ redis.on("connect", () => {
 redis.on("error", (error) => {
   console.log("Redis error: ", error.message);
 });
+
+export default redis;

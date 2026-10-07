@@ -4,7 +4,7 @@ import type {
   businessHoursSchema,
   RestaurantZodSchema,
 } from "./restaurants.validation.js";
-import type { timeStringSchema } from "@/shared/shared.validation.js";
+import type { timeStringSchema } from "../../shared/shared.validation.js";
 import { Document } from "mongoose";
 
 export type RestaurantInput = z.infer<typeof RestaurantZodSchema>;

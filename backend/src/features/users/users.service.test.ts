@@ -4,7 +4,7 @@ import User from "./users.model.js";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import * as userService from "./users.service.js";
 import mongoose from "mongoose";
-import { RegisterUser, UserDocument } from "./users.types.js";
+import { UserInput, UserDocument } from "./users.types.js";
 
 beforeAll(async () => {
   const mongoServer: MongoMemoryServer = await MongoMemoryServer.create();
@@ -35,7 +35,7 @@ describe("makePublic", () => {
 
 describe("createOne ", () => {
   it("creates a user in DB with proper user input and returns a Public User", async () => {
-    const rawUser: RegisterUser = {
+    const rawUser: UserInput = {
       email: "fangyuan@gmail.com",
       role: "manager",
       password: "fang",
@@ -53,13 +53,13 @@ describe("createOne ", () => {
 
 describe("getAll", () => {
   it("gets all users in DB with only email & role", async () => {
-    const user1: RegisterUser = {
+    const user1: UserInput = {
       email: "fangyuan@gmail.com",
       role: "manager",
       password: "fang",
     };
 
-    const user2: RegisterUser = {
+    const user2: UserInput = {
       email: "bainingbing@gmail.com",
       role: "customer",
       password: "bai",
@@ -101,7 +101,7 @@ describe("getOne ", () => {
 
 describe("deleteOne", () => {
   it("deletes a user via valid id", async () => {
-    const user1: RegisterUser = {
+    const user1: UserInput = {
       email: "fangyuan@gmail.com",
       role: "manager",
       password: "fang",

@@ -11,7 +11,7 @@ try {
   if (error instanceof Error) {
     console.log(`Connection to MongoDB failed: ${error.message}`);
   } else {
-    console.log(`Unknown error occured`);
+    console.log(`An unknown error occurred`);
   }
 }
 

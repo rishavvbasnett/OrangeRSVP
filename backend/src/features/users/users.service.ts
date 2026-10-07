@@ -1,6 +1,6 @@
 import { ItemNotFoundError } from "../../shared/utils/errors.js";
 import User from "./users.model.js";
-import type { UserDto, RegisterUser } from "./users.types.js";
+import type { UserDto, UserInput } from "./users.types.js";
 import * as Hash from "../../shared/utils/helpers.js";
 
 export const getOne = async (id: string): Promise<UserDto> => {
@@ -14,7 +14,7 @@ export const getAll = async (): Promise<UserDto[]> => {
   return allUsers.map((user) => toDto(user));
 };
 
-export const createOne = async (validUser: RegisterUser): Promise<UserDto> => {
+export const createOne = async (validUser: UserInput): Promise<UserDto> => {
   const passwordHash = await Hash.convert(validUser.password);
   const newUser = {
     email: validUser.email,

@@ -1,10 +1,25 @@
-import "dotenv/config";
+import { config } from "dotenv";
+import z from "zod";
 
-export const MONGODB_URI = process.env.MONGODB_URI;
+config();
 
-if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not defined");
-export const JWT_SECRET = process.env.JWT_SECRET;
+const envSchema = z.object({
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+  POSTGRES_URL: z.url(),
+  JWT_SECRET: z.string().min(1),
+  PORT: z.coerce.number().default(3000),
+  REDIS_URL: z.url(),
+});
 
-export const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+const parsedEnv = envSchema.safeParse(process.env);
 
-export const PORT = process.env.PORT;
+if (!parsedEnv.success) {
+  console.log("Invalid environment variables", z.treeifyError(parsedEnv.error));
+  process.exit(1);
+}
+
+const env = parsedEnv.data;
+
+export default env;

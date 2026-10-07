@@ -4,7 +4,7 @@ import { Document } from "mongoose";
 
 export type role = "manager" | "customer" | "admin" | "kitchen" | "foh";
 
-export type RegisterUser = z.infer<typeof UserInputSchema>;
+export type UserInput = z.infer<typeof UserInputSchema>;
 
 export interface UserDocument extends Document {
   email: string;
