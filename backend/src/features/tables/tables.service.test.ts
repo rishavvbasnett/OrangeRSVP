@@ -3,9 +3,9 @@ import tableService from "./tables.service.js";
 import Table from "./tables.model.js";
 import Restaurant from "../restaurants/restaurants.model.js";
 import {
-  ItemNotFoundError,
+  ResourceNotFoundError,
   BadRequestError,
-} from "../../shared/utils/errors.js";
+} from "../../shared/utils/errorClasses.js";
 import mongoServer from "../../shared/test/mongoServer.setup.js";
 import {
   createRestaurantPayload,
@@ -77,7 +77,7 @@ describe("createOne", () => {
       restaurantId: invalidRestaurantId,
     });
     await expect(tableService.createOne(table1Payload)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
     expect(
       await Table.findOne({
@@ -120,7 +120,7 @@ describe("getOne", () => {
     );
     await Table.deleteMany({});
     await expect(tableService.getOne(savedTable1._id)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -181,7 +181,7 @@ describe("updateOne", () => {
     await Table.deleteMany({});
     await expect(
       tableService.updateOne(savedTable1._id, updates),
-    ).rejects.toThrow(ItemNotFoundError);
+    ).rejects.toThrow(ResourceNotFoundError);
   });
 });
 
@@ -228,7 +228,7 @@ describe("setOverload", () => {
     const randomTableId = new mongoose.Types.ObjectId().toString();
 
     await expect(tableService.setOverload(randomTableId, 10)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -256,7 +256,7 @@ describe("clearOverload", () => {
   it("throws ItemNotFoundError when table id does not exist", async () => {
     const randomTableId = new mongoose.Types.ObjectId().toString();
     await expect(tableService.clearOverload(randomTableId)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -296,7 +296,7 @@ describe("deleteOne", () => {
     );
     await Table.deleteMany({});
     await expect(tableService.deleteOne(savedTable1._id)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -356,6 +356,6 @@ describe("getAllForRestaurant", () => {
     const invalidRestaurantId = new mongoose.Types.ObjectId().toString();
     await expect(
       tableService.getAllForRestaurant(invalidRestaurantId),
-    ).rejects.toThrow(ItemNotFoundError);
+    ).rejects.toThrow(ResourceNotFoundError);
   });
 });

@@ -1,15 +1,9 @@
 import z from "zod";
-import type { UserInputSchema } from "./users.validation.js";
-import { Document } from "mongoose";
-
-export type role = "manager" | "customer" | "admin" | "kitchen" | "foh";
+import type { users } from "./users.schema.js";
+import { UserInputSchema, ProfileUpdateSchema } from "./users.validation.js";
 
 export type UserInput = z.infer<typeof UserInputSchema>;
-
-export interface UserDocument extends Document {
-  email: string;
-  passwordHash: string;
-  role: role;
-}
-
-export type UserDto = Omit<UserDocument, "passwordHash">;
+export type UserRow = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type UserDto = Omit<UserRow, "passwordHash">;
+export type ProfileUpdate = z.infer<typeof ProfileUpdateSchema>;

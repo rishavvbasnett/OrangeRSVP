@@ -1,8 +1,8 @@
 import { IdParam } from "../../shared/shared.types.js";
 import {
   BadRequestError,
-  ItemNotFoundError,
-} from "../../shared/utils/errors.js";
+  ResourceNotFoundError,
+} from "../../shared/utils/errorClasses.js";
 import {
   ensureRestaurantExists,
   ensureUserExists,
@@ -19,7 +19,7 @@ const createOne = async (
 
 const getOne = async (tableId: IdParam): Promise<TableDocument> => {
   const foundTable = await Table.findById(tableId);
-  if (!foundTable) throw new ItemNotFoundError("Table not found");
+  if (!foundTable) throw new ResourceNotFoundError("Table not found");
   return foundTable;
 };
 
@@ -32,7 +32,7 @@ const getAllForRestaurant = async (
 
 const deleteOne = async (tableId: IdParam): Promise<TableDocument> => {
   const table = await Table.findByIdAndDelete(tableId);
-  if (!table) throw new ItemNotFoundError("Table not found");
+  if (!table) throw new ResourceNotFoundError("Table not found");
   return table;
 };
 
@@ -44,7 +44,7 @@ const updateOne = async (
     returnDocument: "after",
     runValidators: true,
   });
-  if (!updatedTable) throw new ItemNotFoundError("Table not found");
+  if (!updatedTable) throw new ResourceNotFoundError("Table not found");
   return updatedTable;
 };
 
@@ -53,7 +53,7 @@ const setOverload = async (
   newCapacity: number,
 ): Promise<TableDocument> => {
   const foundTable = await Table.findById(tableId);
-  if (!foundTable) throw new ItemNotFoundError("Table not found");
+  if (!foundTable) throw new ResourceNotFoundError("Table not found");
   if (newCapacity < foundTable.seats)
     throw new BadRequestError("maximumCapacity cannot be less than seats");
   foundTable.overload = true;
@@ -63,7 +63,7 @@ const setOverload = async (
 
 const clearOverload = async (tableId: IdParam): Promise<TableDocument> => {
   const foundTable = await Table.findById(tableId);
-  if (!foundTable) throw new ItemNotFoundError("Table not found");
+  if (!foundTable) throw new ResourceNotFoundError("Table not found");
   foundTable.overload = false;
   foundTable.maximumCapacity = foundTable.seats;
   return foundTable.save();

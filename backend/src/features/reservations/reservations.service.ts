@@ -1,5 +1,5 @@
 import { IdParam } from "../../shared/shared.types.js";
-import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
 import { ensureRestaurantExists } from "../../shared/utils/helpers.js";
 import Reservation from "./reservations.model.js";
 import type {
@@ -25,13 +25,15 @@ const getAll = async (): Promise<ReservationDto[]> => {
 
 const getOne = async (reservationId: IdParam): Promise<ReservationDto> => {
   const foundReservation = await Reservation.findById(reservationId).lean();
-  if (!foundReservation) throw new ItemNotFoundError("Reservation not found");
+  if (!foundReservation)
+    throw new ResourceNotFoundError("Reservation not found");
   return toReservationDto(foundReservation);
 };
 
 const deleteOne = async (reservationId: IdParam): Promise<ReservationDto> => {
   const deletedReservation = await Reservation.findByIdAndDelete(reservationId);
-  if (!deletedReservation) throw new ItemNotFoundError("Reservation not found");
+  if (!deletedReservation)
+    throw new ResourceNotFoundError("Reservation not found");
   return toReservationDto(deletedReservation);
 };
 
@@ -49,7 +51,8 @@ const updateOne = async (
       runValidators: true,
     },
   );
-  if (!updatedReservation) throw new ItemNotFoundError("Reservation not found");
+  if (!updatedReservation)
+    throw new ResourceNotFoundError("Reservation not found");
   return toReservationDto(updatedReservation);
 };
 

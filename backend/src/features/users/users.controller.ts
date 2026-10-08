@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as userService from "./users.service.js";
 import { UserInputSchema } from "./users.validation.js";
 import { IdParamSchema } from "../../shared/shared.validation.js";
-import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
 import asyncHandler from "../../shared/middleware/asyncHandler.js";
 
 export const createUser = asyncHandler(
@@ -25,7 +25,7 @@ export const deleteUser = asyncHandler(
     const rawId = request.params.id;
     const parsedId = IdParamSchema.safeParse(rawId);
     if (!parsedId.success) {
-      throw new ItemNotFoundError(parsedId.error.issues[0].message);
+      throw new ResourceNotFoundError(parsedId.error.issues[0].message);
     }
 
     const deletedUser = await userService.deleteOne(parsedId.data);

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { UnauthorizedError } from "../utils/errors.js";
+import { UnauthorizedError } from "../utils/errorClasses.js";
 import { JWT_SECRET } from "../config/env.js";
 import jwt from "jsonwebtoken";
 import asyncHandler from "./asyncHandler.js";

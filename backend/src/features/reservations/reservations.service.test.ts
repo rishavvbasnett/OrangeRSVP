@@ -5,7 +5,7 @@ import Reservation from "./reservations.model.js";
 import * as reservationService from "./reservations.service.js";
 import type { ReservationInput } from "./reservations.types.js";
 import mongoServer from "../../shared/test/mongoServer.setup.js";
-import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
 
 const createReservationPayload = (
   overrides: Partial<ReservationInput> = {},
@@ -127,7 +127,7 @@ describe("getOne", () => {
   it("returns null when reservation doesn't exist in the db", async () => {
     await Reservation.findByIdAndDelete(reservation1.id);
     await expect(reservationService.getOne(reservation1.id)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -146,14 +146,14 @@ describe("deleteOne", () => {
       status: reservation1.status,
     });
     await expect(reservationService.getOne(reservation1.id)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 
   it("throws ItemNotFoundError when reservation doesn't exists", async () => {
     await Reservation.findByIdAndDelete(reservation1.id);
     await expect(reservationService.getOne(reservation1.id)).rejects.toThrow(
-      ItemNotFoundError,
+      ResourceNotFoundError,
     );
   });
 });
@@ -192,6 +192,6 @@ describe("updateOne", () => {
         name: "reservation3",
         status: "seated",
       }),
-    ).rejects.toThrow(ItemNotFoundError);
+    ).rejects.toThrow(ResourceNotFoundError);
   });
 });

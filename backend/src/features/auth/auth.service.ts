@@ -1,7 +1,7 @@
 import User from "../users/users.model.js";
 import type { Credential, AccessTokenPayload } from "./auth.types.js";
 import bcrypt from "bcrypt";
-import { UnauthorizedError } from "../../shared/utils/errors.js";
+import { UnauthorizedError } from "../../shared/utils/errorClasses.js";
 import { generateAccessToken, generateRefreshToken } from "./auth.helpers.js";
 
 export const login = async ({ username, password }: Credential) => {

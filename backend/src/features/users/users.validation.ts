@@ -1,14 +1,22 @@
 import z from "zod";
 
 export const UserInputSchema = z.object({
-  email: z.email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
-  role: z.enum(["manager", "customer", "admin", "kitchen"]),
+  name: z.string().min(1),
+  email: z.string().trim().toLowerCase().pipe(z.email()),
+  phone: z.e164().optional(),
+  password: z.string().min(1),
 });
 
-export const UserSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  passwordHash: z.string(),
-  role: z.enum(["manager", "customer", "admin", "kitchen", "foh"]),
-});
+export const ProfileUpdateSchema = z
+  .object({
+    name: z.string().trim().min(1).optional(),
+    phone: z.e164().optional(),
+  })
+  .refine(
+    (data) => {
+      const hasAtLeastOneField =
+        data.name !== undefined || data.phone !== undefined;
+      return hasAtLeastOneField;
+    },
+    { error: "Provide at least one field to update" },
+  );

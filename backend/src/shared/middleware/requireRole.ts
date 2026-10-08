@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import type { role } from "../../features/users/users.types.js";
-import { ForbiddenError, UnauthorizedError } from "../utils/errors.js";
+import { ForbiddenError, UnauthorizedError } from "../utils/errorClasses.js";
 import asyncHandler from "./asyncHandler.js";
 
 const requireRole = (...allowedRoles: role[]) => {

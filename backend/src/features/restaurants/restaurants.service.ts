@@ -1,7 +1,7 @@
 import type { RestaurantInput } from "./restaurants.types.js";
 import type { RestaurantDocument } from "./restaurants.types.js";
 import Restaurant from "./restaurants.model.js";
-import { ItemNotFoundError } from "../../shared/utils/errors.js";
+import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
 
 export const createOne = async (
   restaurantInput: RestaurantInput,
@@ -16,7 +16,7 @@ export const deleteOne = async (
 ): Promise<RestaurantDocument> => {
   const deletedRestaurant = await Restaurant.findByIdAndDelete(restaurantId);
   if (!deletedRestaurant) {
-    throw new ItemNotFoundError("Restaurant not found");
+    throw new ResourceNotFoundError("Restaurant not found");
   }
   return deletedRestaurant;
 };
@@ -32,6 +32,6 @@ export const getOne = async (
   restaurantId: string,
 ): Promise<RestaurantDocument> => {
   const foundRestaurant = await Restaurant.findById(restaurantId).lean();
-  if (!foundRestaurant) throw new ItemNotFoundError("Restaurant not found");
+  if (!foundRestaurant) throw new ResourceNotFoundError("Restaurant not found");
   return foundRestaurant;
 };

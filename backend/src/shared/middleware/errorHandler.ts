@@ -1,7 +1,7 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
-import { HttpError } from "../utils/errors.js";
+import { HttpError } from "../utils/errorClasses.js";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 export const errorHandler: ErrorRequestHandler = (

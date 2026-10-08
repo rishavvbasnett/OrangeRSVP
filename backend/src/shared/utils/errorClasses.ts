@@ -1,0 +1,44 @@
+export class HttpError extends Error {
+  public readonly statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = "HttpError";
+    this.statusCode = statusCode;
+  }
+}
+
+export class UnauthorizedError extends HttpError {
+  constructor(message: string) {
+    super(message, 401);
+    this.name = "UnauthorizedError";
+  }
+}
+
+export class ForbiddenError extends HttpError {
+  constructor(message: string) {
+    super(message, 403);
+    this.name = "ForbiddenError";
+  }
+}
+
+export class ResourceNotFoundError extends HttpError {
+  constructor(message: string) {
+    super(message, 404);
+    this.name = "ResourceNotFoundError";
+  }
+}
+
+export class BadRequestError extends HttpError {
+  constructor(message: string) {
+    super(message, 400);
+    this.name = "BadRequestError";
+  }
+}
+
+export class TooManyRequestsError extends HttpError {
+  constructor(message: string = "Too many requests") {
+    super(message, 429);
+    this.name = "TooManyRequestsError";
+  }
+}

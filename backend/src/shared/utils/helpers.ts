@@ -5,7 +5,7 @@ import type { role } from "../../features/users/users.types.js";
 import { randomUUID } from "node:crypto";
 import type { IdParam } from "../shared.types.js";
 import Restaurant from "../../features/restaurants/restaurants.model.js";
-import { ItemNotFoundError } from "./errors.js";
+import { ResourceNotFoundError } from "./errorClasses.js";
 
 const saltRounds = 12;
 
@@ -32,12 +32,13 @@ export const createToken = async (role: role) => {
 
 export const ensureRestaurantExists = async (restaurantId: IdParam) => {
   const foundRestaurant = await Restaurant.findById(restaurantId);
-  if (!foundRestaurant) throw new ItemNotFoundError("Restaurant doesn't exist");
+  if (!foundRestaurant)
+    throw new ResourceNotFoundError("Restaurant doesn't exist");
   return foundRestaurant;
 };
 
 export const ensureUserExists = async (userId: IdParam) => {
   const foundUser = await User.findById(userId);
-  if (!foundUser) throw new ItemNotFoundError("User doesn't exist");
+  if (!foundUser) throw new ResourceNotFoundError("User doesn't exist");
   return foundUser;
 };
