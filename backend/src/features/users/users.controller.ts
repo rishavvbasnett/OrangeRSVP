@@ -1,34 +1,55 @@
-import { Request, Response } from "express";
-import * as userService from "./users.service.js";
-import { UserInputSchema } from "./users.validation.js";
-import { IdParamSchema } from "../../shared/shared.validation.js";
-import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
+import type { NextFunction, Request, Response } from "express";
 import asyncHandler from "../../shared/middleware/asyncHandler.js";
+import { ProfileUpdateSchema, UserInputSchema } from "./users.validation.js";
+import userService from "./users.service.js";
+import { IdParamSchema } from "../../shared/shared.validation.js";
 
-export const createUser = asyncHandler(
-  async (request: Request, response: Response) => {
-    const validUserObject = UserInputSchema.parse(request.body);
-    const createdUser = await userService.createOne(validUserObject);
-    return response.status(201).json(createdUser);
+const createUser = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const parsedUser = UserInputSchema.parse(req.body);
+    const savedUser = await userService.createUser(parsedUser);
+    return res.json(savedUser);
   },
 );
 
-export const getAllUsers = asyncHandler(
-  async (_request: Request, response: Response) => {
-    const allUsers = await userService.getAll();
-    return response.json(allUsers);
+const getAllUsers = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const allUsers = await userService.getAllUsers();
+    return res.json(allUsers);
   },
 );
 
-export const deleteUser = asyncHandler(
-  async (request: Request, response: Response) => {
-    const rawId = request.params.id;
-    const parsedId = IdParamSchema.safeParse(rawId);
-    if (!parsedId.success) {
-      throw new ResourceNotFoundError(parsedId.error.issues[0].message);
-    }
-
-    const deletedUser = await userService.deleteOne(parsedId.data);
-    return response.status(200).json(deletedUser);
+const getUser = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const id = IdParamSchema.parse(req.params.id);
+    const foundUser = await userService.getUser(id);
+    return res.json(foundUser);
   },
 );
+
+const updateProfile = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const id = IdParamSchema.parse(req.params.id);
+    const parsedUpdates = ProfileUpdateSchema.parse(req.body);
+    const updatedUser = await userService.updateProfile(id, parsedUpdates);
+    return res.json(updatedUser);
+  },
+);
+
+const deactivateUser = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const id = IdParamSchema.parse(req.params.id);
+    const deactivatedUser = await userService.deactivateUser(id);
+    return res.json(deactivatedUser);
+  },
+);
+
+const userController = {
+  createUser,
+  getUser,
+  getAllUsers,
+  updateProfile,
+  deactivateUser,
+};
+
+export default userController;

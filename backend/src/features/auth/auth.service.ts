@@ -1,44 +1,124 @@
-import User from "../users/users.model.js";
-import type { Credential, AccessTokenPayload } from "./auth.types.js";
-import bcrypt from "bcrypt";
+import db from "../../shared/config/db.js";
+import redis from "../../shared/config/redis.js";
+import { eq } from "drizzle-orm";
 import { UnauthorizedError } from "../../shared/utils/errorClasses.js";
-import { generateAccessToken, generateRefreshToken } from "./auth.helpers.js";
+import { users } from "../users/users.schema.js";
+import { convertToDto, SALT_ROUNDS } from "../users/users.service.js";
+import type { UserRow } from "../users/users.types.js";
+import {
+  blocklistAccessToken,
+  generateRefreshToken,
+  generateRefreshTokenKey,
+  REFRESH_TOKEN_TTL_SECONDS,
+  revokeRefreshToken,
+  signAccessToken,
+  verifyAndDecodeAccessToken,
+} from "./auth.tokens.js";
+import type {
+  DecodedAccessToken,
+  RefreshTokenRecord,
+  TokenPair,
+} from "./auth.types.js";
+import bcrypt from "bcrypt";
+import type { Credential } from "./auth.types.js";
 
-export const login = async ({ username, password }: Credential) => {
-  const foundUser = await User.findOne({ email: username });
+const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
+const INVALID_SESSION_MESSAGE = "Invalid or expired session";
 
-  if (!foundUser) throw new UnauthorizedError("Invalid email or password");
+const issueTokenPair = async (user: UserRow): Promise<TokenPair> => {
+  const accessToken = signAccessToken(user.id, user.platformRole);
+  const refreshToken = generateRefreshToken();
 
-  const passwordIsCorrect = await bcrypt.compare(
-    password,
+  const refreshTokenRecord: RefreshTokenRecord = { userId: user.id };
+  await redis.setex(
+    generateRefreshTokenKey(refreshToken),
+    REFRESH_TOKEN_TTL_SECONDS,
+    JSON.stringify(refreshTokenRecord),
+  );
+  const tokenPair: TokenPair = {
+    accessToken,
+    refreshToken,
+  };
+  return tokenPair;
+};
+
+const login = async (credentials: Credential) => {
+  const [foundUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, credentials.email));
+
+  if (!foundUser) {
+    await bcrypt.compare(
+      credentials.password,
+      bcrypt.hashSync("timing-equilizer", SALT_ROUNDS),
+    );
+    throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
+  }
+
+  const passwordMatches = await bcrypt.compare(
+    credentials.password,
     foundUser.passwordHash,
   );
 
-  if (!passwordIsCorrect)
-    throw new UnauthorizedError("Invalid email or password");
+  if (!passwordMatches)
+    throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
 
-  const accessTokenPayload: AccessTokenPayload = {
-    sub: foundUser._id.toString(),
-    role: foundUser.role,
-  };
+  if (!foundUser.isActive)
+    throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
 
-  const accessToken = generateAccessToken(accessTokenPayload);
-  const refreshToken = await generateRefreshToken(foundUser._id.toString());
-  const user = {
-    id: foundUser._id.toString(),
-    email: foundUser.email,
-    role: foundUser.role,
-  };
-
+  const tokenPair = await issueTokenPair(foundUser);
+  const user = convertToDto(foundUser);
   return {
-    accessToken,
-    refreshToken,
     user,
+    tokenPair,
   };
+};
+
+const refresh = async (refreshToken: string) => {
+  const storedRefreshToken = await redis.getdel(
+    generateRefreshTokenKey(refreshToken),
+  );
+  if (!storedRefreshToken) throw new UnauthorizedError(INVALID_SESSION_MESSAGE);
+
+  const refreshTokenRecord: RefreshTokenRecord = JSON.parse(storedRefreshToken);
+
+  const [foundUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, refreshTokenRecord.userId));
+
+  if (!foundUser || !foundUser.isActive)
+    throw new UnauthorizedError(INVALID_SESSION_MESSAGE);
+
+  const tokenPair = await issueTokenPair(foundUser);
+  const user = convertToDto(foundUser);
+  return {
+    user,
+    tokenPair,
+  };
+};
+
+const logout = async (
+  refreshToken: string,
+  accessToken: string | undefined,
+): Promise<void> => {
+  await revokeRefreshToken(refreshToken);
+  if (!accessToken) return;
+
+  let decodedAccessToken: DecodedAccessToken;
+  try {
+    decodedAccessToken = verifyAndDecodeAccessToken(accessToken);
+  } catch {
+    return;
+  }
+  await blocklistAccessToken(decodedAccessToken.jti, decodedAccessToken.exp);
 };
 
 const authService = {
   login,
+  logout,
+  refresh,
 };
 
 export default authService;

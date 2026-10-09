@@ -7,3 +7,4 @@ export type UserRow = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type UserDto = Omit<UserRow, "passwordHash">;
 export type ProfileUpdate = z.infer<typeof ProfileUpdateSchema>;
+export type PlatformRole = UserRow["platformRole"];

@@ -1,14 +1,25 @@
 import z from "zod";
+import type { PlatformRole } from "../users/users.types.js";
 import {
-  AccessTokenPayloadSchema,
   CredentialSchema,
+  DecodedAccessTokenSchema,
   RefreshTokenSchema,
 } from "./auth.validation.js";
 
-export type AccessTokenPayload = z.infer<typeof AccessTokenPayloadSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
-export type RefreshToken = z.infer<typeof RefreshTokenSchema>;
-export type DecodedAccessToken = AccessTokenPayload & {
-  jti: string;
-  exp: number;
+export type RefreshTokenBody = z.infer<typeof RefreshTokenSchema>;
+export type DecodedAccessToken = z.infer<typeof DecodedAccessTokenSchema>;
+
+export type AuthenticatedUser = {
+  id: number;
+  platformRole: PlatformRole;
+};
+
+export type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type RefreshTokenRecord = {
+  userId: number;
 };

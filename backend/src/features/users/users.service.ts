@@ -10,9 +10,9 @@ import type {
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
-const SALT_ROUNDS = 10;
+export const SALT_ROUNDS = 10;
 
-const convertToDto = (user: UserRow): UserDto => {
+export const convertToDto = (user: UserRow): UserDto => {
   const userDto: UserDto = {
     id: user.id,
     name: user.name,
@@ -30,6 +30,11 @@ const getUser = async (id: number): Promise<UserDto> => {
   const [foundUser] = await db.select().from(users).where(eq(users.id, id));
   if (!foundUser) throw new ResourceNotFoundError("User not found");
   return convertToDto(foundUser);
+};
+
+const getAllUsers = async (): Promise<UserDto[]> => {
+  const allUsers = await db.select().from(users);
+  return allUsers.map((user) => convertToDto(user));
 };
 
 const createUser = async (user: UserInput): Promise<UserDto> => {
@@ -74,6 +79,7 @@ const updateProfile = async (id: number, updates: ProfileUpdate) => {
 
 const userService = {
   getUser,
+  getAllUsers,
   createUser,
   updateProfile,
   deactivateUser,

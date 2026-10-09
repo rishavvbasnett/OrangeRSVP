@@ -1,13 +1,19 @@
 import z from "zod";
+import { platformRole } from "../users/users.schema.js";
 
 export const CredentialSchema = z.object({
-  username: z.string().trim().min(1),
+  email: z.string().trim().toLowerCase().pipe(z.email()),
   password: z.string().min(1),
 });
 
-export const AccessTokenPayloadSchema = z.object({
-  sub: z.string().trim().min(1),
-  role: z.enum(["manager", "customer", "admin", "kitchen", "foh"]),
+export const RefreshTokenSchema = z.object({
+  refreshToken: z.string().min(1),
 });
 
-export const RefreshTokenSchema = z.uuid();
+export const DecodedAccessTokenSchema = z.object({
+  sub: z.string().regex(/^[1-9]\d*$/),
+  role: z.enum(platformRole.enumValues),
+  jti: z.string().min(1),
+  iat: z.number().int(),
+  exp: z.number().int(),
+});
