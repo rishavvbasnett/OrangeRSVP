@@ -8,7 +8,7 @@ const createUser = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const parsedUser = UserInputSchema.parse(req.body);
     const savedUser = await userService.createUser(parsedUser);
-    return res.json(savedUser);
+    return res.status(201).json(savedUser);
   },
 );
 

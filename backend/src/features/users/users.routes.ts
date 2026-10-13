@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import userController from "./users.controller.js";
 import authenticate from "../../shared/middleware/authenticate.js";
 import requireRole from "../../shared/middleware/requireRole.js";
+import loadActor from "../../shared/middleware/loadActor.js";
 import { rateLimit } from "../../shared/middleware/rateLimit.js";
 
 const userRouter = Router();
@@ -18,7 +19,7 @@ const signupRateLimit = rateLimit({
   keyGenerator: identifyByIp,
 });
 
-const adminOnly = [authenticate, requireRole("admin")];
+const adminOnly = [authenticate, loadActor, requireRole("admin")];
 
 userRouter.post("/", signupRateLimit, userController.createUser);
 

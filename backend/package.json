@@ -8,16 +8,13 @@
     "start": "tsx src/server.ts",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "npx tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate:test": "NODE_ENV=test drizzle-kit migrate",
     "test:users:service": "vitest run src/features/users/users.service.test.ts",
     "test:users:routes": "vitest run src/features/users/users.routes.test.ts",
-    "test:reservations:service": "vitest run src/features/reservations/reservations.service.test.ts",
-    "test:reservations:routes": "vitest run src/features/reservations/reservations.routes.test.ts",
-    "test:restaurants:service": "vitest run src/features/restaurants/restaurants.service.test.ts",
-    "test:restaurants:routes": "vitest run src/features/restaurants/restaurants.routes.test.ts",
-    "test:auth:routes": "vitest run src/features/auth/auth.routes.test.ts",
-    "test:tables:service": "vitest run src/features/tables/tables.service.test.ts",
-    "test:tables:routes": "vitest run src/features/tables/tables.routes.test.ts"
+    "test:auth:routes": "vitest run src/features/auth/auth.routes.test.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -33,7 +30,6 @@
     "@eslint/js": "^9.34.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
-    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.13.3",
@@ -43,7 +39,6 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.34.0",
     "globals": "^16.4.0",
-    "mongodb-memory-server": "^11.2.0",
     "supertest": "^7.2.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
@@ -56,7 +51,6 @@
   "type": "module",
   "allowScripts": {
     "bcrypt@6.0.0": true,
-    "mongodb-memory-server@11.2.0": true,
     "esbuild@0.28.2": true
   }
 }

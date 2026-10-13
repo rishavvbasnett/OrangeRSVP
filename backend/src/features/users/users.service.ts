@@ -9,6 +9,7 @@ import type {
 } from "./users.types.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { invalidateActorCache } from "../auth/auth.actor.js";
 
 export const SALT_ROUNDS = 10;
 
@@ -59,6 +60,8 @@ const deactivateUser = async (id: number): Promise<UserDto> => {
     .returning();
 
   if (!deactivatedUser) throw new ResourceNotFoundError("User not found");
+
+  await invalidateActorCache(deactivatedUser.id);
 
   return convertToDto(deactivatedUser);
 };

@@ -23,3 +23,9 @@ export type TokenPair = {
 export type RefreshTokenRecord = {
   userId: number;
 };
+
+export type Actor = {
+  id: number;
+  platformRole: PlatformRole;
+  isActive: boolean;
+};

@@ -41,7 +41,7 @@ Staff is a membership, not a value on `users.role`. A waiter at restaurant A can
 | D4 | `ends_at = starts_at + restaurants.default_duration_minutes`. The client never sends it | Clients can't hold tables longer than allowed |
 | D5 | Online booking requires an account. Guest online booking (capability token) is deferred | Removes tokens, actor union and anonymous-abuse controls from v1. Adding it later is one nullable column plus one CHECK |
 | D6 | Staff is a `restaurant_staff` row, no staff role column in v1 | One kind of staff means the column says nothing. Add `role` later in one migration |
-| D7 | `users.role` is `customer` or `admin`, default `customer` | Signup can never create an admin. First admin comes from a seed script |
+| D7 | `users.platform_role` is `customer` or `admin`, default `customer` | Signup can never create an admin. First admin comes from a seed script |
 | D8 | IDs are `integer identity` | Simple and fast. Sequential ids are enumerable, so the protection is the policy check, not hidden ids |
 | D9 | All times are `timestamptz` (UTC instants). `business_hours` use `time` plus the restaurant's IANA timezone | "7pm" means nothing without a zone, and DST shifts it |
 | D10 | Online and phone bookings start on slot boundaries (`slot_interval_minutes`) inside business hours, within `booking_horizon_days`. Walk-ins start at `now()` and skip the slot rule | Stops 19:07 online bookings and "book for 2031". A walk-in arrives when it arrives |
@@ -51,7 +51,7 @@ Staff is a membership, not a value on `users.role`. A waiter at restaurant A can
 | D14 | **Default:** online bookings are confirmed at creation. There is no `pending` state in v1 | No staff action needed, and no stale bookings holding tables. An approval flow (large parties) adds `pending` later with `ALTER TYPE ... ADD VALUE` |
 | D15 | Admin creates restaurants and assigns staff. Staff manage tables and hours of their own restaurant | Floor staff mark a table out of service mid-shift |
 | D16 | Users are never hard-deleted. `is_active = false` blocks login, and the per-request actor loader rejects inactive users and revoked memberships | A JWT stays valid until it expires; the loader is what revokes access immediately |
-| D17 | JWT: `sub` is `String(id)`, `expiresIn` set, algorithm pinned to HS256. Refresh tokens and blocklist come in their own later slice | Changing the database and redesigning auth in one slice makes failures ambiguous |
+| D17 | Auth (slice 2, ported from AdvancedJWT): access JWT 10 min, HS256 pinned, `iss`/`aud` checked, `sub` = `String(id)`, claims validated with Zod. Refresh token: 32 random bytes, stored in Redis only as `sha256` hash, 7 day TTL, single-use rotation with `GETDEL`, re-checks `is_active` on refresh. Logout deletes the refresh token, then blocklists the access `jti` with TTL `exp - now` | Known, already hand-coded design, so porting it with the database change was low risk. Hashing means a Redis dump can't be replayed |
 | D18 | Restaurant `name` is not unique | Two cities can each have a "Joe's Pizza" |
 | D19 | **Default:** shortening business hours keeps existing bookings. The staff day view shows them; nothing is auto-cancelled | Cancelling guests silently is worse than a flagged booking |
 | D20 | **Default:** a party-size change that no longer fits the table is rejected. Staff can change `table_id` in the same request; customers must cancel and rebook | Reassignment is the deferred auto-assign problem |
@@ -60,7 +60,7 @@ Staff is a membership, not a value on `users.role`. A waiter at restaurant A can
 
 | Postgres type | Values |
 |---|---|
-| `user_role` | `customer`, `admin` |
+| `platform_role` | `customer`, `admin` |
 | `reservation_status` | `confirmed`, `seated`, `completed`, `cancelled`, `no_show` |
 | `reservation_source` | `online`, `phone`, `walk_in` |
 | `actor_kind` | `user`, `system` |
@@ -80,7 +80,7 @@ Every table has `created_at timestamptz NOT NULL DEFAULT now()`. Tables whose ro
 | password_hash | text | NOT NULL. Never selected outside login |
 | name | text | NOT NULL |
 | phone | text | NULL. E.164 when present |
-| role | user_role | NOT NULL DEFAULT `customer` |
+| platform_role | platform_role | NOT NULL DEFAULT `customer` |
 | is_active | boolean | NOT NULL DEFAULT true |
 | created_at, updated_at | timestamptz | NOT NULL DEFAULT now() |
 
@@ -231,7 +231,7 @@ erDiagram
     text password_hash
     text name
     text phone
-    user_role role
+    platform_role platform_role
     bool is_active
   }
   RESTAURANTS {
@@ -403,6 +403,9 @@ Drizzle wraps pg errors, so read `err.cause.code`.
 - Per-party-size turn times, per-restaurant cancel cutoff.
 - No booking caps per customer; the global rate limiter is the only abuse control.
 - `updated_at` is set by the app only.
+- Login returns a distinct message for a deactivated account (after the correct password), so anyone holding the password learns the account exists but is disabled. Chosen on purpose for a clearer support path.
+- No "revoke all sessions" for a user: deactivation relies on the L2 actor loader rejecting inactive users, and refresh re-checking `is_active`.
+- Two concurrent refreshes with the same token (two browser tabs): `GETDEL` lets one win and logs the other out. No grace window.
 
 ## 13. Build order
 
@@ -424,4 +427,4 @@ Each slice: schema, generate, read the SQL, migrate, service, policy, routes, te
 - Auto table assignment with retry on `23P01`; combined tables (junction table).
 - `pending` state and an approval flow for large parties.
 - Staff roles on `restaurant_staff` (`manager`, `foh`, `kitchen`), the first step toward the Restaurant OS.
-- Refresh tokens and blocklist (ported from AdvancedJWT).
+- Auth upgrades: per-user session index + `revokedBefore` (revoke all sessions on deactivate or password change), refresh-token families with reuse detection, refresh token in an httpOnly cookie, `kid` key rotation, OAuth / Google login.

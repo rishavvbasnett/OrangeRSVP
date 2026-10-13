@@ -414,6 +414,13 @@ describe("authenticate + requireRole (via GET /users/:id, admin only)", () => {
 
   it("customer token returns 403", async () => {
     await seedUser1();
+    await db.insert(users).values(
+      createUserPayload({
+        name: "customer",
+        email: "customer@gmail.com",
+        platformRole: "customer",
+      }),
+    );
     const customerToken = signAccessToken(2, "customer");
 
     const response = await getUser1With(`Bearer ${customerToken}`);
