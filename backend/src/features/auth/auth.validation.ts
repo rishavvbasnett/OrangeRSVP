@@ -12,7 +12,7 @@ export const RefreshTokenSchema = z.object({
 
 export const DecodedAccessTokenSchema = z.object({
   sub: z.string().regex(/^[1-9]\d*$/),
-  role: z.enum(platformRole.enumValues),
+  platformRole: z.enum(platformRole.enumValues),
   jti: z.string().min(1),
   iat: z.number().int(),
   exp: z.number().int(),

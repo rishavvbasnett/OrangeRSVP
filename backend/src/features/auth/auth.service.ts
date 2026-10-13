@@ -24,6 +24,14 @@ import type { Credential } from "./auth.types.js";
 
 const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password";
 const INVALID_SESSION_MESSAGE = "Invalid or expired session";
+const INACTIVE_USER_MESSAGE = "Account deactivated. Contact support";
+
+// Computed once at startup with the same cost as real hashes,
+// so "no such user" takes as long as "wrong password".
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+  "timing-equalizer-not-a-real-password",
+  SALT_ROUNDS,
+);
 
 const issueTokenPair = async (user: UserRow): Promise<TokenPair> => {
   const accessToken = signAccessToken(user.id, user.platformRole);
@@ -49,10 +57,7 @@ const login = async (credentials: Credential) => {
     .where(eq(users.email, credentials.email));
 
   if (!foundUser) {
-    await bcrypt.compare(
-      credentials.password,
-      bcrypt.hashSync("timing-equilizer", SALT_ROUNDS),
-    );
+    await bcrypt.compare(credentials.password, DUMMY_PASSWORD_HASH);
     throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
   }
 
@@ -64,8 +69,7 @@ const login = async (credentials: Credential) => {
   if (!passwordMatches)
     throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
 
-  if (!foundUser.isActive)
-    throw new UnauthorizedError(INVALID_CREDENTIALS_MESSAGE);
+  if (!foundUser.isActive) throw new UnauthorizedError(INACTIVE_USER_MESSAGE);
 
   const tokenPair = await issueTokenPair(foundUser);
   const user = convertToDto(foundUser);

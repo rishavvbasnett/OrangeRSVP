@@ -17,7 +17,7 @@ export const signAccessToken = (
   userId: number,
   platformRole: PlatformRole,
 ): string => {
-  const payload = { role: platformRole };
+  const payload = { platformRole };
 
   const accessToken = jwt.sign(payload, env.JWT_SECRET, {
     algorithm: "HS256",
