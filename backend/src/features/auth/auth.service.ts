@@ -4,21 +4,14 @@ import { eq } from "drizzle-orm";
 import { UnauthorizedError } from "../../shared/utils/errorClasses.js";
 import { users } from "../users/users.schema.js";
 import { convertToDto, SALT_ROUNDS } from "../users/users.service.js";
-import type { UserRow } from "../users/users.types.js";
 import {
   blocklistAccessToken,
-  generateRefreshToken,
   generateRefreshTokenKey,
-  REFRESH_TOKEN_TTL_SECONDS,
+  issueTokenPair,
   revokeRefreshToken,
-  signAccessToken,
   verifyAndDecodeAccessToken,
 } from "./auth.tokens.js";
-import type {
-  DecodedAccessToken,
-  RefreshTokenRecord,
-  TokenPair,
-} from "./auth.types.js";
+import type { DecodedAccessToken, RefreshTokenRecord } from "./auth.types.js";
 import bcrypt from "bcrypt";
 import type { Credential } from "./auth.types.js";
 
@@ -32,23 +25,6 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
   "timing-equalizer-not-a-real-password",
   SALT_ROUNDS,
 );
-
-const issueTokenPair = async (user: UserRow): Promise<TokenPair> => {
-  const accessToken = signAccessToken(user.id, user.platformRole);
-  const refreshToken = generateRefreshToken();
-
-  const refreshTokenRecord: RefreshTokenRecord = { userId: user.id };
-  await redis.setex(
-    generateRefreshTokenKey(refreshToken),
-    REFRESH_TOKEN_TTL_SECONDS,
-    JSON.stringify(refreshTokenRecord),
-  );
-  const tokenPair: TokenPair = {
-    accessToken,
-    refreshToken,
-  };
-  return tokenPair;
-};
 
 const login = async (credentials: Credential) => {
   const [foundUser] = await db

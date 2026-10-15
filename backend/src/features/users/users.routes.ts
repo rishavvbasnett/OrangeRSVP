@@ -19,13 +19,35 @@ const signupRateLimit = rateLimit({
   keyGenerator: identifyByIp,
 });
 
-const adminOnly = [authenticate, loadActor, requireRole("admin")];
-
 userRouter.post("/", signupRateLimit, userController.createUser);
 
-userRouter.get("/", adminOnly, userController.getAllUsers);
-userRouter.get("/:id", adminOnly, userController.getUser);
-userRouter.patch("/:id", adminOnly, userController.updateProfile);
-userRouter.post("/:id/deactivate", adminOnly, userController.deactivateUser);
+userRouter.get(
+  "/",
+  authenticate,
+  loadActor,
+  requireRole("admin"),
+  userController.getAllUsers,
+);
+userRouter.get(
+  "/:id",
+  authenticate,
+  loadActor,
+  requireRole("admin", "customer"),
+  userController.getUser,
+);
+userRouter.patch(
+  "/:id",
+  authenticate,
+  loadActor,
+  requireRole("admin", "customer"),
+  userController.updateProfile,
+);
+userRouter.post(
+  "/:id/deactivate",
+  authenticate,
+  loadActor,
+  requireRole("admin"),
+  userController.deactivateUser,
+);
 
 export default userRouter;

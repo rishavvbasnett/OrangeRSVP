@@ -1,8 +1,12 @@
 import jwt from "jsonwebtoken";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import env from "../../shared/config/env.js";
-import { PlatformRole } from "../users/users.types.js";
-import { DecodedAccessToken } from "./auth.types.js";
+import type { PlatformRole, UserRow } from "../users/users.types.js";
+import type {
+  DecodedAccessToken,
+  RefreshTokenRecord,
+  TokenPair,
+} from "./auth.types.js";
 import { DecodedAccessTokenSchema } from "./auth.validation.js";
 import { UnauthorizedError } from "../../shared/utils/errorClasses.js";
 import redis from "../../shared/config/redis.js";
@@ -46,8 +50,14 @@ export const verifyAndDecodeAccessToken = (
   return parsedPayload.data;
 };
 
-export const generateRefreshToken = (): string => {
+export const signRefreshToken = async (userId: number): Promise<string> => {
   const refreshToken = randomBytes(32).toString("base64url");
+  const refreshTokenRecord: RefreshTokenRecord = { userId };
+  await redis.setex(
+    generateRefreshTokenKey(refreshToken),
+    REFRESH_TOKEN_TTL_SECONDS,
+    JSON.stringify(refreshTokenRecord),
+  );
   return refreshToken;
 };
 
@@ -58,11 +68,11 @@ export const hashToken = (token: string): string => {
 
 export const extractBearerToken = (
   authorizationHeader: string | undefined,
-): string | undefined => {
-  if (!authorizationHeader) return undefined;
+): string | null => {
+  if (!authorizationHeader) return null;
 
   const [scheme, token] = authorizationHeader.split(" ");
-  if (scheme !== "Bearer" || !token) return undefined;
+  if (scheme !== "Bearer" || !token) return null;
 
   return token;
 };
@@ -86,4 +96,14 @@ export const blocklistAccessToken = async (jti: string, exp: number) => {
   const secondsUntilExpiry = exp - nowInSeconds;
 
   if (secondsUntilExpiry > 0) await redis.setex(key, secondsUntilExpiry, "1");
+};
+export const issueTokenPair = async (user: UserRow): Promise<TokenPair> => {
+  const accessToken = signAccessToken(user.id, user.platformRole);
+  const refreshToken = await signRefreshToken(user.id);
+
+  const tokenPair: TokenPair = {
+    accessToken,
+    refreshToken,
+  };
+  return tokenPair;
 };
