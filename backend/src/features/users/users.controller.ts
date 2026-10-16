@@ -22,7 +22,8 @@ const getAllUsers = asyncHandler(
 const getUser = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const id = IdParamSchema.parse(req.params.id);
-    const foundUser = await userService.getUser(id);
+    const actor = req.actor;
+    const foundUser = await userService.getUser(actor, id);
     return res.json(foundUser);
   },
 );
@@ -31,7 +32,12 @@ const updateProfile = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction) => {
     const id = IdParamSchema.parse(req.params.id);
     const parsedUpdates = ProfileUpdateSchema.parse(req.body);
-    const updatedUser = await userService.updateProfile(id, parsedUpdates);
+    const actor = req.actor;
+    const updatedUser = await userService.updateProfile(
+      actor,
+      id,
+      parsedUpdates,
+    );
     return res.json(updatedUser);
   },
 );

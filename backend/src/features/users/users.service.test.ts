@@ -4,9 +4,20 @@ import { createUserPayload } from "../../shared/test/createPayload.js";
 import { users } from "./users.schema.js";
 import db from "../../shared/config/db.js";
 import userService from "./users.service.js";
-import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
+import {
+  ForbiddenError,
+  ResourceNotFoundError,
+} from "../../shared/utils/errorClasses.js";
+import type { Actor } from "../auth/auth.types.js";
 import type { ProfileUpdate, UserInput } from "./users.types.js";
 import bcrypt from "bcrypt";
+
+const adminActor: Actor = { id: 999, platformRole: "admin", isActive: true };
+
+const customerActor = (userId: number): Actor => {
+  const actor: Actor = { id: userId, platformRole: "customer", isActive: true };
+  return actor;
+};
 
 describe("getUser", () => {
   it("returns UserDto with valid userId", async () => {
@@ -18,14 +29,14 @@ describe("getUser", () => {
       .insert(users)
       .values(user1Payload)
       .returning();
-    const foundUser1 = await userService.getUser(savedUser1.id);
+    const foundUser1 = await userService.getUser(adminActor, savedUser1.id);
     expect(foundUser1.name).toBe(savedUser1.name);
     expect(foundUser1.email).toBe(savedUser1.email);
     expect(foundUser1).not.toHaveProperty("passwordHash");
   });
 
   it("throws ResourceNotFoundError with invalid userId", async () => {
-    await expect(userService.getUser(99)).rejects.toThrow(
+    await expect(userService.getUser(adminActor, 99)).rejects.toThrow(
       ResourceNotFoundError,
     );
   });
@@ -36,7 +47,7 @@ describe("getUser", () => {
       .values(createUserPayload())
       .returning();
 
-    const foundUser = await userService.getUser(savedUser.id);
+    const foundUser = await userService.getUser(adminActor, savedUser.id);
 
     const expectedDto = {
       id: savedUser.id,
@@ -62,7 +73,7 @@ describe("getUser", () => {
       )
       .returning();
 
-    const foundUser = await userService.getUser(secondUser.id);
+    const foundUser = await userService.getUser(adminActor, secondUser.id);
 
     expect(foundUser.id).toBe(secondUser.id);
     expect(foundUser.name).toBe("second");
@@ -74,7 +85,7 @@ describe("getUser", () => {
       .values(createUserPayload({ phone: null }))
       .returning();
 
-    const foundUser = await userService.getUser(savedUser.id);
+    const foundUser = await userService.getUser(adminActor, savedUser.id);
 
     expect(foundUser.phone).toBeNull();
   });
@@ -144,9 +155,13 @@ describe("updateProfile", () => {
       .values(createUserPayload({ name: "Old Name", phone: "+14155550000" }))
       .returning();
 
-    const updatedUser = await userService.updateProfile(savedUser.id, {
-      name: "New Name",
-    });
+    const updatedUser = await userService.updateProfile(
+      adminActor,
+      savedUser.id,
+      {
+        name: "New Name",
+      },
+    );
 
     expect(updatedUser.name).toBe("New Name");
     expect(updatedUser.phone).toBe("+14155550000");
@@ -159,7 +174,9 @@ describe("updateProfile", () => {
       .values(createUserPayload())
       .returning();
 
-    await userService.updateProfile(savedUser.id, { phone: "+14155559999" });
+    await userService.updateProfile(adminActor, savedUser.id, {
+      phone: "+14155559999",
+    });
 
     const [storedUser] = await db
       .select()
@@ -180,7 +197,7 @@ describe("updateProfile", () => {
       isActive: false,
     } as unknown as ProfileUpdate;
 
-    await userService.updateProfile(savedUser.id, maliciousUpdate);
+    await userService.updateProfile(adminActor, savedUser.id, maliciousUpdate);
 
     const [storedUser] = await db
       .select()
@@ -204,7 +221,9 @@ describe("updateProfile", () => {
       .values(createUserPayload({ name: "Other", email: "other@example.com" }))
       .returning();
 
-    await userService.updateProfile(targetUser.id, { name: "Changed" });
+    await userService.updateProfile(adminActor, targetUser.id, {
+      name: "Changed",
+    });
 
     const [storedOther] = await db
       .select()
@@ -215,7 +234,7 @@ describe("updateProfile", () => {
 
   it("throws ResourceNotFoundError for a missing user", async () => {
     await expect(
-      userService.updateProfile(99, { name: "Nobody" }),
+      userService.updateProfile(adminActor, 99, { name: "Nobody" }),
     ).rejects.toThrow(ResourceNotFoundError);
   });
 });
@@ -371,5 +390,74 @@ describe("users table (persistence and constraints)", () => {
 
     const rows = await db.select().from(users);
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe("users policy (via service)", () => {
+  it("customer can view their own profile", async () => {
+    const [savedUser] = await db
+      .insert(users)
+      .values(createUserPayload())
+      .returning();
+
+    const foundUser = await userService.getUser(
+      customerActor(savedUser.id),
+      savedUser.id,
+    );
+
+    expect(foundUser.id).toBe(savedUser.id);
+  });
+
+  it("customer cannot view another user", async () => {
+    const [otherUser] = await db
+      .insert(users)
+      .values(createUserPayload())
+      .returning();
+    const strangerActor = customerActor(otherUser.id + 1);
+
+    await expect(
+      userService.getUser(strangerActor, otherUser.id),
+    ).rejects.toThrow(ForbiddenError);
+  });
+
+  it("customer gets 404, not a crash, for a missing user", async () => {
+    await expect(userService.getUser(customerActor(5), 99)).rejects.toThrow(
+      ResourceNotFoundError,
+    );
+  });
+
+  it("customer can update their own profile", async () => {
+    const [savedUser] = await db
+      .insert(users)
+      .values(createUserPayload())
+      .returning();
+
+    const updatedUser = await userService.updateProfile(
+      customerActor(savedUser.id),
+      savedUser.id,
+      { name: "Me" },
+    );
+
+    expect(updatedUser.name).toBe("Me");
+  });
+
+  it("customer cannot update another user and nothing changes", async () => {
+    const [otherUser] = await db
+      .insert(users)
+      .values(createUserPayload({ name: "Original" }))
+      .returning();
+    const strangerActor = customerActor(otherUser.id + 1);
+
+    await expect(
+      userService.updateProfile(strangerActor, otherUser.id, {
+        name: "Hacked",
+      }),
+    ).rejects.toThrow(ForbiddenError);
+
+    const [storedUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, otherUser.id));
+    expect(storedUser.name).toBe("Original");
   });
 });

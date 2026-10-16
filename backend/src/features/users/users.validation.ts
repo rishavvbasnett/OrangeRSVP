@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const UserInputSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   email: z.string().trim().toLowerCase().pipe(z.email()),
   phone: z.e164().optional(),
   password: z.string().min(1),

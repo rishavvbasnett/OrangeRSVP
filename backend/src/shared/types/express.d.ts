@@ -6,8 +6,8 @@ import type {
 declare global {
   namespace Express {
     interface Request {
-      user?: AuthenticatedUser;
-      actor?: Actor;
+      user: AuthenticatedUser;
+      actor: Actor;
     }
   }
 }

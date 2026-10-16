@@ -1,5 +1,8 @@
 import db from "../../shared/config/db.js";
-import { ResourceNotFoundError } from "../../shared/utils/errorClasses.js";
+import {
+  ForbiddenError,
+  ResourceNotFoundError,
+} from "../../shared/utils/errorClasses.js";
 import { users } from "./users.schema.js";
 import type {
   ProfileUpdate,
@@ -10,8 +13,16 @@ import type {
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { invalidateActorCache } from "../auth/auth.actor.js";
+import type { Actor } from "../auth/auth.types.js";
+import userPolicy from "./users.policy.js";
 
 export const SALT_ROUNDS = 10;
+
+const findUserOrThrow = async (userId: number): Promise<UserRow> => {
+  const [foundUser] = await db.select().from(users).where(eq(users.id, userId));
+  if (!foundUser) throw new ResourceNotFoundError("User not found");
+  return foundUser;
+};
 
 export const convertToDto = (user: UserRow): UserDto => {
   const userDto: UserDto = {
@@ -27,9 +38,10 @@ export const convertToDto = (user: UserRow): UserDto => {
   return userDto;
 };
 
-const getUser = async (id: number): Promise<UserDto> => {
-  const [foundUser] = await db.select().from(users).where(eq(users.id, id));
-  if (!foundUser) throw new ResourceNotFoundError("User not found");
+const getUser = async (actor: Actor, userId: number): Promise<UserDto> => {
+  const foundUser = await findUserOrThrow(userId);
+  if (!userPolicy.canViewUser(actor, foundUser))
+    throw new ForbiddenError("Forbidden");
   return convertToDto(foundUser);
 };
 
@@ -52,11 +64,11 @@ const createUser = async (user: UserInput): Promise<UserDto> => {
   return convertToDto(savedUser);
 };
 
-const deactivateUser = async (id: number): Promise<UserDto> => {
+const deactivateUser = async (userId: number): Promise<UserDto> => {
   const [deactivatedUser] = await db
     .update(users)
     .set({ isActive: false })
-    .where(eq(users.id, id))
+    .where(eq(users.id, userId))
     .returning();
 
   if (!deactivatedUser) throw new ResourceNotFoundError("User not found");
@@ -66,17 +78,22 @@ const deactivateUser = async (id: number): Promise<UserDto> => {
   return convertToDto(deactivatedUser);
 };
 
-const updateProfile = async (id: number, updates: ProfileUpdate) => {
+const updateProfile = async (
+  actor: Actor,
+  userId: number,
+  updates: ProfileUpdate,
+) => {
+  const foundUser = await findUserOrThrow(userId);
+  if (!userPolicy.canUpdateProfile(actor, foundUser))
+    throw new ForbiddenError("Forbidden");
   const [updatedProfile] = await db
     .update(users)
     .set({
       name: updates.name,
       phone: updates.phone,
     })
-    .where(eq(users.id, id))
+    .where(eq(users.id, userId))
     .returning();
-
-  if (!updatedProfile) throw new ResourceNotFoundError("User not found");
   return convertToDto(updatedProfile);
 };
 
